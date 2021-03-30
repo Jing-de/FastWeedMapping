@@ -1,0 +1,129 @@
+import os
+import numpy as np
+import sys
+import utils
+import keras
+import shutil
+import time
+
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+num_classes = 6
+
+
+def predict_image_set_with_augmentation(images, model):
+    augmented_images,_ = utils.augment(images, np.zeros(images.shape[0]))
+    predictions = model.predict(augmented_images)
+    return np.exp(np.mean(np.log(predictions),axis=0,keepdims=True))
+
+        
+def save_error(label, prediction, file):
+    classes = utils.get_classes()
+    path = "./errors/%s_classified_as_%s" % (classes[label], classes[prediction])
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    shutil.copyfile(file, path + "/" + os.path.basename(file))
+    
+    
+def print_statistics(confusion_matrix):
+    accuracy = np.trace(confusion_matrix)/np.sum(confusion_matrix)
+    print("Accuracy = %.4f (on %i test instances)" % (accuracy, np.sum(confusion_matrix)))
+
+    classes = utils.get_classes()
+    for i in range(0, len(classes)):
+        recall_class = confusion_matrix[i, i]/np.sum(confusion_matrix[i,: ])
+        precision_class = confusion_matrix[i, i]/np.sum(confusion_matrix[:, i])
+        print("Class %s precision/recall: %0.4f/%0.4f" % (classes[i], precision_class, recall_class))
+
+    print("Confusion matrix (rows = true class, columns = predicted class):\n")
+    for i in range(0, 6):
+        for j in range(0, 6):
+            s = "%i" % int(confusion_matrix[i, j])
+            while len(s) < 6:
+                s = " " + s
+            sys.stdout.write(s)
+        sys.stdout.write("\n")
+    
+    
+def evaluate_model_fast(model_name, path):
+    model = keras.models.load_model(model_name)
+    images, labels, files = utils.load_images_classes(path)
+
+    predictions = []
+    errors = []
+    num_classes = len(utils.get_classes())
+    confusion_matrix = np.zeros((num_classes, num_classes))
+
+    print("Evaluating model (fast version) on %i instances..." % images.shape[0])
+    start = time.time()    
+    prediction_probs = model.predict(images)
+    print('predictions_probs')
+    print(prediction_probs.shape)
+    print(prediction_probs)
+    print("Elased time: %f seconds" % (time.time() - start))
+
+    for i in range(0,images.shape[0]):
+        predicted_class = np.argmax(prediction_probs[i, :])
+        print('predicted_class')
+        print(predicted_class.shape)
+        print(predicted_class)
+        predictions.append(predicted_class)
+        label = int(labels[i])
+        confusion_matrix[label,predicted_class] += 1
+        if label == predicted_class:
+            errors.append(0)
+        else:
+            save_error(label, predicted_class, files[i])
+            errors.append(1)
+
+    print_statistics(confusion_matrix)
+    
+    
+def evaluate_model(model_filepath, path):
+    # Retrieve the setup to transform base model into flex model
+    from utils import generate_setup_dict
+    setup = generate_setup_dict()
+    num_classes = len(utils.get_classes())
+    
+    model_name = model_filepath[28:-3]
+    model = keras.models.load_model(model_filepath)
+    
+    from predict_on_full_images_flex import transform_highres_center_model
+    flex_model = transform_highres_center_model(model, num_classes, model_name=model_name, from_model_to_setup=setup)
+    
+    images, labels, files = utils.load_images_classes(path)
+
+    predictions = []
+    errors = []
+    confusion_matrix = np.zeros((num_classes, num_classes))
+    print("Evaluating model...")
+    if os.path.isdir("./errors"):
+        shutil.rmtree("./errors")    
+    
+    for i in range(0,images.shape[0]):
+        if i % 1000 == 0:
+            print(i)
+            
+        prediction_probs = predict_image_set_with_augmentation(images[i:i+1, :, :, :], flex_model)[0]
+        # uncomment below if using flex_model
+        #prediction_probs = predict_image_set_with_augmentation(images[i:i+1, :, :, :], model)[0]
+        predicted_class = np.argmax(prediction_probs)
+        predictions.append(predicted_class)
+        label = int(labels[i])
+        confusion_matrix[label, predicted_class] += 1
+        if label == predicted_class:
+            errors.append(0)
+        else:
+            errors.append(1)
+
+    np.save('./Results/Testing_Metrics/Confusion_Matrix/flex_' + model_name + '_cm.npy', confusion_matrix)
+    print('./Results/Testing_Metrics/Confusion_Matrix/flex_'   + model_name + '_cm.npy')
+    print_statistics(confusion_matrix)
+            
+
+if __name__ == "__main__":
+    np.random.seed(1)
+    model_path = './Results/Saved_Model_As_h5'
+    for model_name in ['resnet_manual_highres_center_only_f1_{}_f2_{}'.format(int(x), int(2*x)) for x in [2,4,6,8,16]]:
+        print(model_name)
+        evaluate_model(model_path + '/' + model_name + '.h5', './ImageTestSet/201x201_TestSetMid_selected')
