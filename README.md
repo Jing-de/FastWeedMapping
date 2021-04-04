@@ -22,13 +22,3 @@ All converted frozen graphs are going to be saved within "./Models/Frozen_graphs
 **Important Remark:** The vanilla resnet is converted to **flex model** here. Thus, the exported frozen graph is already a **flex model** on full-precision mode (FP32)
 
 2.2 - Call `predict_on_full_images.py` to generate annotations, inference times and confusion matrices. You can give the command line argument `-p FP16` to use half-precision or `-p FP32` for full-precision. All results generated at this stage are saved within "./Results/seeds/*"
-
-@to-do: Use python script to generate these metrics instead of python notebook
-2.3 - Use the python notebook named `generate_seed_metrics_benchmarks.ipynb` to output the **.csv** files. 
-
-
-
-#### Generate quick inferences, using half-precision, on one image
-
-For debugging purposes, the script `half_precision_quick_inferences.py` was created to perform quick inferences and test inferences and how long it took for an inference to be complete. 
-
