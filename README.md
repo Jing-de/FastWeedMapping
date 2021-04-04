@@ -19,7 +19,7 @@ You can find the inference files in the folder `inference`
 
 All converted frozen graphs are going to be saved within `./Models/Frozen_graphs/*`
 
-**Important Remark:** The `vanilla` resnet is converted to `flex model` here. Thus, the exported frozen graph is already a `flex model` on full-precision mode (FP32)
+**Important Remark:** The vanilla resnet is converted to `flex model` here. Thus, the exported frozen graph is already a `flex model` on full-precision mode (FP32)
 
 2.2 - Call `predict_on_full_images.py` to generate annotations, inference times and confusion matrices. You can give the command line argument `-p FP16` to use half-precision or `-p FP32` for full-precision. All results generated at this stage are saved within `./Results/seeds/*`
 
