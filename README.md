@@ -5,7 +5,7 @@ The project pipeline worked as following:
 
 ### 1. Training resnet models
 
-First we have to train the models, since there is an easy Keras implementation, we make use of that implementation.
+First we have to train the models on some good GPU, on a NVIDIA Titan X the smallest model (2-4 filter) takes few hours.
 
 1.1 - Models are constructed by calling `models.py`
 
