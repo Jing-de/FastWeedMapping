@@ -70,10 +70,10 @@ def load_images_folder(path, max_images=99999999999):
         if i % 1000 == 0:  # Count number
             print(i)
         image = np.array(Image.open(files[i])) / 255.0  # Normalize image values
-        if image.shape[0:2] == images[0, :, :, :].shape[0:2]:  # if image size is 201*201 load image values into ndarray
+        if image.shape[0:2] == images[0, :, :, :].shape[0:2]:  # if image size is 201*201 load image into 'images'
             if use_coordinates:
                 images[loaded, :, :, 0:3] = image
-                images[loaded, :, :, 3] = coordinate_layer(image)
+                images[loaded, :, :, 3] = coordinate_layer(image)  # add coordinate map
             else:
                 images[loaded, :, :, :] = image
             loaded += 1
@@ -170,12 +170,13 @@ def shuffle(images, labels, files):
 
 
 def load_images_classes(path, max_num_images=99999999999):
+    #  return all images and related class value and file name. file name is useless
     classes = get_classes()  # get classes' name list
     images = None
     files = []
     for i in range(0, len(classes)):
         images_class, files_class = load_images_folder(path + "/" + classes[i], max_num_images)
-        labels_class = i * np.ones(images_class.shape[0])
+        labels_class = i * np.ones(images_class.shape[0])  # set class value to the images
         files.extend(files_class)
         if images is None:
             images = images_class

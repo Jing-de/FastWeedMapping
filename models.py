@@ -1,8 +1,8 @@
 from __future__ import print_function
-from keras.models import Model
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, Add, \
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, Add, \
     Activation, GlobalAveragePooling2D, BatchNormalization, Cropping2D
-import keras_resnet.models
+# import keras_resnet.models
 import numpy as np
 np.set_printoptions(suppress=True)
 
