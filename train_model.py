@@ -3,12 +3,14 @@ import time
 import numpy as np
 import glob
 import os
-import keras
+# import keras
+import tensorflow.keras as keras
 import tensorflow as tf
 from models import setup_model_resnet_manual_highres_center_only
 from PIL import Image
 from tensorflow.python.client import device_lib
-from keras.callbacks import TensorBoard, CSVLogger
+from tensorflow.keras.callbacks import TensorBoard, CSVLogger
+# from keras.callbacks import TensorBoard, CSVLogger
 
 
 # GPU CONFIGURATION
@@ -53,7 +55,7 @@ def load_images_folder(path, max_images=99999999999):
     images that are not in correct shape
     """
     pattern = path + "/*.tif"
-    files = sorted(glob.glob(pattern))[0:max_images]
+    files = sorted(glob.glob(pattern))[0:max_images]  # order image files
     print("Loading images from path %s..." % (pattern))
 
     files_loaded = []
@@ -65,13 +67,13 @@ def load_images_folder(path, max_images=99999999999):
     discarded = 0
     loaded = 0
     for i in range(0, len(files)):
-        if i % 1000 == 0:
+        if i % 1000 == 0:  # Count number
             print(i)
-        image = np.array(Image.open(files[i])) / 255.0
-        if image.shape[0:2] == images[0, :, :, :].shape[0:2]:
+        image = np.array(Image.open(files[i])) / 255.0  # Normalize image values
+        if image.shape[0:2] == images[0, :, :, :].shape[0:2]:  # if image size is 201*201 load image into 'images'
             if use_coordinates:
                 images[loaded, :, :, 0:3] = image
-                images[loaded, :, :, 3] = coordinate_layer(image)
+                images[loaded, :, :, 3] = coordinate_layer(image)  # add coordinate map
             else:
                 images[loaded, :, :, :] = image
             loaded += 1
@@ -168,12 +170,13 @@ def shuffle(images, labels, files):
 
 
 def load_images_classes(path, max_num_images=99999999999):
-    classes = get_classes()
+    #  return all images and related class value and file name. file name is useless
+    classes = get_classes()  # get classes' name list
     images = None
     files = []
     for i in range(0, len(classes)):
         images_class, files_class = load_images_folder(path + "/" + classes[i], max_num_images)
-        labels_class = i * np.ones(images_class.shape[0])
+        labels_class = i * np.ones(images_class.shape[0])  # set class value to the images
         files.extend(files_class)
         if images is None:
             images = images_class
